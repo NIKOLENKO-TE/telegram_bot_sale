@@ -168,7 +168,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user = query.from_user
-    print(f"🟢 `{query.data}` от `@{user.username}` (ID: {user.id}) в {datetime.now()}")
+    print(f"🟢 `{query.data}` от `@{user.username}` (ID: {user.id}) в {datetime.now(berlin)}")
     await query.answer()
 
     # ! Чтобы кнопка с ценой не удалял фотографии товара в чате

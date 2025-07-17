@@ -1,4 +1,4 @@
-# import pip
+import pip
 # pip.main(['install', 'pytelegrambotapi'])
 import os
 import sys

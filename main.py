@@ -2,8 +2,8 @@ import asyncio
 import collections
 import json
 import os
-import os
-import pip
+import pip  # Needed for GitHub Actions console
+import pytz
 import sys
 import time
 import traceback
@@ -11,95 +11,106 @@ from datetime import datetime
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# TOKEN = "7601422052:AAFoAskZd7mwIrPjy9xGUc-T0eq60i3qmcQ"
-TOKEN = os.environ.get("BOT_TOKEN")
-CONTACT_URL = "https://t.me/portishead_berlin"
-print(f"🔑 Bot token: {TOKEN}")
+import config
 
-# 📂 Загрузка категории товаров
-def load_categories(path="config/categories.json"):
-    if not os.path.exists(path):
-        print(f"❌ Categories file '{path}' not found.")
-        return {}
-    try:
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-            return data
-    except Exception as e:
-        print(f"❌ Error loading categories: {type(e).__name__}: {e}")
-        traceback.print_exc()
-        return {}
+class CategoryManager:
+    def __init__(self, path: str):
+        self.path = path
+        self.categories = self.load_categories()
 
-categories = load_categories()
+    def load_categories(self) -> dict:
+        if not os.path.exists(self.path):
+            print(f"❌ Categories file `{self.path}` not found.")
+            return {}
+        try:
+            with open(self.path, encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"❌ Error loading categories: {type(e).__name__}: {e}")
+            traceback.print_exc()
+            return {}
 
-print(f"📂 Всего категорий загружено: {len(categories)}")
-for key, name in categories.items():
-    print(f"  └── {key}: {name}")
+    def print_categories(self) -> None:
+        print(f"📂 Всего категорий загружено: {len(self.categories)}")
+        for key, name in self.categories.items():
+            print(f"  └── {key}: {name}")
 
-# 📂 Загрузка товаров из JSON файлов с расширенным логированием
-def load_all_lots(folder="data/products"):
-    lots = {}
-    category_files = collections.defaultdict(list)
+class ProductManager:
+    def __init__(self, folder: str):
+        self.folder = folder
+        self.products = self.load_all_lots()
+        self.process_product_names()
 
-    if not os.path.exists(folder):
-        print(f"❌ Folder '{folder}' not found.")
+    def load_all_lots(self) -> dict:
+        lots = {}
+        category_files = collections.defaultdict(list)
+        if not os.path.exists(self.folder):
+            print(f"❌ Folder '{self.folder}' not found.")
+            return lots
+        for root, _, files in os.walk(self.folder):
+            for filename in files:
+                if filename.endswith(".json"):
+                    path = os.path.join(root, filename)
+                    try:
+                        with open(path, encoding="utf-8") as f:
+                            data = json.load(f)
+                            lots[filename[:-5]] = data
+                            rel_path = os.path.relpath(path, self.folder)
+                            category = os.path.relpath(root, self.folder)
+                            category_files[category].append(filename)
+                    except Exception as e:
+                        print(f"❌ Error in: {path}: {type(e).__name__}: {e}")
+                        traceback.print_exc()
+        print(f"\n📦 Всего товаров загружено: {len(lots)}")
+        for cat, files in category_files.items():
+            print(f"  └── 📦 {cat}: {len(files)}")
+            for fname in files:
+                print(f"      └── {fname}")
         return lots
 
-    for root, _, files in os.walk(folder):
-        for filename in files:
-            if filename.endswith(".json"):
-                path = os.path.join(root, filename)
-                try:
-                    with open(path, encoding="utf-8") as f:
-                        data = json.load(f)
-                        lots[filename[:-5]] = data
-                        rel_path = os.path.relpath(path, folder)
-                        category = os.path.relpath(root, folder)
-                        category_files[category].append(filename)
-                except Exception as e:
-                    print(f"❌ Error in: {path}: {type(e).__name__}: {e}")
-                    traceback.print_exc()
+    def process_product_names(self):
+        for product in self.products.values():
+            price = product.get("price", "")
+            name = product.get("name", "")
+            if name.startswith("✅ €") and "|" in name:
+                name = name.split("|", 1)[-1].strip()
+            product["name"] = f"✅ €{price} | {name}"
 
-    print(f"\n📦 Всего товаров загружено: {len(lots)}")
-    for cat, files in category_files.items():
-        print(f"  └── 📦 {cat}: {len(files)}")
-        for fname in files:
-            print(f"      └── {fname}")
-    return lots
+class TextManager:
+    def __init__(self, folder: str):
+        self.folder = folder
 
-products = load_all_lots()
+    def load_text(self, name: str) -> str:
+        if not os.path.exists(self.folder):
+            print(f"❌ Folder '{self.folder}' not found.")
+            return ""
+        path = os.path.join(self.folder, f"{name}.json")
+        try:
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+                return data["text"]
+        except Exception as e:
+            print(f"❌ Error in: {path}: {type(e).__name__}: {e}")
+            traceback.print_exc()
+            return ""
 
-# 📝 Обработка товаров: добавление префикса к названию
-for product in products.values():
-    price = product.get("price", "")
-    name = product.get("name", "")
-    # Remove any existing prefix like "✅ €... | "
-    if name.startswith("✅ €") and "|" in name:
-        name = name.split("|", 1)[-1].strip()
-    product["name"] = f"✅ €{price} | {name}"
+TOKEN = config.TOKEN
+CONTACT_URL = config.CONTACT_URL
 
-# 📂 Загрузка текстов
-def load_text(name, folder="data/texts"):
-    if not os.path.exists(folder):
-        print(f"❌ Folder '{folder}' not found.")
-        return ""
-    path = os.path.join(folder, f"{name}.json")
-    try:
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-            return data["text"]
-    except Exception as e:
-        print(f"❌ Error in: {path}: {type(e).__name__}: {e}")
-        traceback.print_exc()
-        return ""
+category_manager = CategoryManager(config.CATEGORIES_PATH)
+categories = category_manager.categories
+category_manager.print_categories()
 
-warranty_text = load_text("warranty")
-delivery_text = load_text("delivery")
-payment_text = load_text("payment")
-about_text = load_text("about")
-services_text = load_text("services")
+product_manager = ProductManager(config.PRODUCTS_FOLDER)
+products = product_manager.products
 
-# 🔘 Клавиатуры-фабрики
+text_manager = TextManager(config.TEXTS_FOLDER)
+warranty_text = text_manager.load_text("warranty")
+delivery_text = text_manager.load_text("delivery")
+payment_text = text_manager.load_text("payment")
+about_text = text_manager.load_text("about")
+services_text = text_manager.load_text("services")
+
 def main_menu_keyboard():
     return InlineKeyboardMarkup([
         [
@@ -155,7 +166,6 @@ def default_nav_keyboard():
         [InlineKeyboardButton("📩 Связаться с продавцом", url=CONTACT_URL)]
     ])
 
-# 🚀 Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     print(f"▶️ `/start` от {user.username} (ID: {user.id}) в {datetime.now()}")
@@ -164,19 +174,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=main_menu_keyboard()
     )
 
-# 🔘 Обработка кнопок
 async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user = query.from_user
-    print(f"🟢 `{query.data}` от `@{user.username}` (ID: {user.id}) в {datetime.now(ZoneInfo('Europe/Berlin'))}")
+    print(
+        f"🟢 `{query.data}` от `@{user.username}` (ID: {user.id}) в `Europe/Berlin` time `{datetime.now(pytz.timezone('Europe/Berlin'))}`")
     await query.answer()
 
-    # ! Чтобы кнопка с ценой не удалял фотографии товара в чате
     if query.data == "noop":
         await query.answer("Это просто цена, действие не требуется.")
         return
 
-    # 🧹 Очистка старых фото
     album = context.user_data.pop("last_album", [])
     for msg_id in album:
         try:
@@ -184,14 +192,11 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             pass
 
-    # 🔘 Категории
     if query.data == "available":
         await query.edit_message_text(
             "📂 Выберите категорию:",
             reply_markup=category_keyboard(categories)
         )
-
-    # 🔘 Товары по категории
     elif query.data.startswith("cat_"):
         cat_key = query.data[4:]
         product_buttons = [
@@ -211,8 +216,6 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"📦 Товары в категории: {categories.get(cat_key, 'неизвестно')}",
             reply_markup=InlineKeyboardMarkup(product_buttons + nav_buttons)
         )
-
-    # 🔘 Конкретный товар
     elif query.data in products:
         product = products[query.data]
         if not product.get("photos"):
@@ -236,54 +239,41 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML"
             )
         await query.delete_message()
-
-    # 🔘 Описание
     elif query.data == "about":
         await query.edit_message_text(
             about_text,
             reply_markup=default_nav_keyboard()
         )
-
-    # 🔘 Доставка
     elif query.data == "delivery":
         await query.edit_message_text(
             delivery_text,
             reply_markup=default_nav_keyboard(),
             parse_mode="HTML"
         )
-
-    # 🔘 Оплата
     elif query.data == "payment":
         await query.edit_message_text(
             payment_text,
             reply_markup=default_nav_keyboard(),
             parse_mode="HTML"
         )
-
-    # 🔘 Услуги
     elif query.data == "services":
         await query.edit_message_text(
             services_text,
             reply_markup=default_nav_keyboard(),
             parse_mode="HTML"
         )
-
-    # 🔘 Гарантия и отказ
     elif query.data == "warranty":
         await query.edit_message_text(
             warranty_text,
             reply_markup=default_nav_keyboard(),
             parse_mode="HTML"
         )
-
-    # 🔘 На главную
     elif query.data == "home":
         await query.edit_message_text(
             "👋 Вы снова на главной странице. \n👉 Выберите действие:",
             reply_markup=main_menu_keyboard()
         )
 
-# 🚀 Запуск бота
 if __name__ == "__main__":
     start_time = time.time()
     try:

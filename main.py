@@ -71,6 +71,15 @@ def load_all_lots(folder="data/products"):
 
 products = load_all_lots()
 
+# 📝 Обработка товаров: добавление префикса к названию
+for product in products.values():
+    price = product.get("price", "")
+    name = product.get("name", "")
+    # Remove any existing prefix like "✅ €... | "
+    if name.startswith("✅ €") and "|" in name:
+        name = name.split("|", 1)[-1].strip()
+    product["name"] = f"✅ €{price} | {name}"
+
 # 📂 Загрузка текстов
 def load_text(name, folder="data/texts"):
     if not os.path.exists(folder):

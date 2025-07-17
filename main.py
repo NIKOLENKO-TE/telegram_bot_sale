@@ -1,11 +1,12 @@
-import asyncio
-import json
-import traceback
-import os
-import sys
-import time
-import collections
-from datetime import datetime
+import sys      # ❌ не используется явно, кроме проверки sys.platform (можно оставить, если нужна WindowsSelectorEventLoopPolicy)
+import collections  # ✅ для defaultdict — НУЖЕН
+import time     # ✅ для uptime — НУЖЕН
+import os       # ✅ для проверки/поиска файлов — НУЖЕН
+import json     # ✅ для загрузки JSON — НУЖЕН
+import asyncio  # ✅ для асинхронного запуска — НУЖЕН
+import traceback  # ✅ для логов ошибок — НУЖЕН
+from datetime import datetime  # ✅ для логирования времени — НУЖЕН
+
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 

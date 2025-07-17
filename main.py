@@ -1,23 +1,21 @@
-import pip
-import os
-import sys
-import collections
-import time
-import os
-import json
 import asyncio
+import collections
+import json
+import os
+import os
+import pip
+import sys
+import time
 import traceback
-
 from datetime import datetime
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-#sys.stdout.reconfigure(line_buffering=True)
-
-#TOKEN = "7601422052:AAFoAskZd7mwIrPjy9xGUc-T0eq60i3qmcQ"
+# TOKEN = "7601422052:AAFoAskZd7mwIrPjy9xGUc-T0eq60i3qmcQ"
 TOKEN = os.environ.get("BOT_TOKEN")
 CONTACT_URL = "https://t.me/portishead_berlin"
 print(f"🔑 Bot token: {TOKEN}")
+
 # 📂 Загрузка категории товаров
 def load_categories(path="config/categories.json"):
     if not os.path.exists(path):
@@ -170,7 +168,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user = query.from_user
-    print(f"🟢 Кнопка нажата: `{query.data}` от `@{user.username}` (ID: {user.id})")
+    print(f"🟢 `{query.data}` от `@{user.username}` (ID: {user.id}) в {datetime.now()}")
     await query.answer()
 
     # ! Чтобы кнопка с ценой не удалял фотографии товара в чате
@@ -226,7 +224,8 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML"
             )
         else:
-            print(f"📸 Отправка {len(product['photos'])} фото по товару '{product['name']}' пользователю `@{user.username}`")
+            print(
+                f"📸 Отправка {len(product['photos'])} фото по товару '{product['name']}' пользователю `@{user.username}`")
             media = [InputMediaPhoto(url) for url in product["photos"]]
             sent = await context.bot.send_media_group(chat_id=query.message.chat.id, media=media)
             context.user_data["last_album"] = [m.message_id for m in sent]

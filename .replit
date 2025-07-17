@@ -9,8 +9,4 @@ run = ["sh", "-c", "pip install python-telegram-bot flask requests && python mai
 
 [[ports]]
 localPort = 80
-<<<<<<< HEAD
 externalPort = 80
-=======
-externalPort = 80
->>>>>>> 2c77663a28b43c277b030a2a19b5bb1a03ed0575

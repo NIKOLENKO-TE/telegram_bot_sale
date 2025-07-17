@@ -9,13 +9,14 @@ import asyncio
 import traceback
 
 from background import keep_alive
-from datetime import datetime
+from datetime import datetime  # ✅ для логирования времени — НУЖЕН
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
 TOKEN = "7601422052:AAFoAskZd7mwIrPjy9xGUc-T0eq60i3qmcQ"
 
 CONTACT_URL = "https://t.me/portishead_berlin"
+
 
 # 📂 Загрузка категории товаров
 def load_categories(path="config/categories.json"):
@@ -70,16 +71,7 @@ def load_all_lots(folder="data/products"):
 
 products = load_all_lots()
 
-# 📝 Обработка товаров: добавление цены в начало названия
-for product in products.values():
-    price = product.get("price", "")
-    name = product.get("name", "")
-    # Remove any existing prefix like "✅ €... | "
-    if name.startswith("✅ €") and "|" in name:
-        name = name.split("|", 1)[-1].strip()
-    product["name"] = f"✅ €{price} | {name}"
-
-# 📂 Загрузка текстовой информации блоков "Обо мне", "Гарантия", "Доставка", "Оплата", "Услуги"
+# 📂 Загрузка текстов
 def load_text(name, folder="data/texts"):
     if not os.path.exists(folder):
         print(f"❌ Folder '{folder}' not found.")

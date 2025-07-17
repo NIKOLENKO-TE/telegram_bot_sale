@@ -4,7 +4,6 @@ from threading import Thread
 import time
 import requests
 
-
 app = Flask('')
 
 @app.route('/')

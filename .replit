@@ -1,0 +1,12 @@
+modules = ["python-3.12"]
+run = "pip install python-telegram-bot flask requests && python main.py"
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+run = ["sh", "-c", "pip install python-telegram-bot flask requests && python main.py"]
+
+[[ports]]
+localPort = 80
+externalPort = 80

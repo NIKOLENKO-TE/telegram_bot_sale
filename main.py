@@ -1,15 +1,15 @@
-#pip install flask
-#pip install requests
-import sys      # ❌ не используется явно, кроме проверки sys.platform (можно оставить, если нужна WindowsSelectorEventLoopPolicy)
-import collections  # ✅ для defaultdict — НУЖЕН
-import time     # ✅ для uptime — НУЖЕН
-import os       # ✅ для проверки/поиска файлов — НУЖЕН
-import json     # ✅ для загрузки JSON — НУЖЕН
-import asyncio  # ✅ для асинхронного запуска — НУЖЕН
-import traceback  # ✅ для логов ошибок — НУЖЕН
+import pip
+pip.main(['install', 'pytelegrambotapi'])
+import sys
+import collectionsН
+import time
+import os
+import json
+import asyncio
+import traceback
 
 from background import keep_alive
-from datetime import datetime  # ✅ для логирования времени — НУЖЕН
+from datetime import datetime
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
@@ -70,7 +70,16 @@ def load_all_lots(folder="data/products"):
 
 products = load_all_lots()
 
-# 📂 Загрузка текстов
+# 📝 Обработка товаров: добавление цены в начало названия
+for product in products.values():
+    price = product.get("price", "")
+    name = product.get("name", "")
+    # Remove any existing prefix like "✅ €... | "
+    if name.startswith("✅ €") and "|" in name:
+        name = name.split("|", 1)[-1].strip()
+    product["name"] = f"✅ €{price} | {name}"
+
+# 📂 Загрузка текстовой информации блоков "Обо мне", "Гарантия", "Доставка", "Оплата", "Услуги"
 def load_text(name, folder="data/texts"):
     if not os.path.exists(folder):
         print(f"❌ Folder '{folder}' not found.")

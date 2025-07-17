@@ -1,3 +1,5 @@
+#pip install flask
+#pip install requests
 import sys      # ❌ не используется явно, кроме проверки sys.platform (можно оставить, если нужна WindowsSelectorEventLoopPolicy)
 import collections  # ✅ для defaultdict — НУЖЕН
 import time     # ✅ для uptime — НУЖЕН
@@ -5,8 +7,9 @@ import os       # ✅ для проверки/поиска файлов — НУ
 import json     # ✅ для загрузки JSON — НУЖЕН
 import asyncio  # ✅ для асинхронного запуска — НУЖЕН
 import traceback  # ✅ для логов ошибок — НУЖЕН
-from datetime import datetime  # ✅ для логирования времени — НУЖЕН
 
+from background import keep_alive
+from datetime import datetime  # ✅ для логирования времени — НУЖЕН
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
@@ -270,7 +273,7 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "👋 Вы снова на главной странице. \n👉 Выберите действие:",
             reply_markup=main_menu_keyboard()
         )
-
+keep_alive()
 # 🚀 Запуск бота
 if __name__ == "__main__":
     start_time = time.time()

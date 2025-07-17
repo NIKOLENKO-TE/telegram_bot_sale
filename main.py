@@ -1,7 +1,7 @@
 import pip
 pip.main(['install', 'pytelegrambotapi'])
 import sys
-import collectionsН
+import collections
 import time
 import os
 import json

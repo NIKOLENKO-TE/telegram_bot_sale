@@ -5,13 +5,10 @@ import os
 import sys
 import time
 import collections
-from dotenv import load_dotenv
 from datetime import datetime
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-load_dotenv("config/token.env")
-#TOKEN = os.getenv("TOKEN")
 TOKEN = "7601422052:AAFoAskZd7mwIrPjy9xGUc-T0eq60i3qmcQ"
 
 CONTACT_URL = "https://t.me/portishead_berlin"

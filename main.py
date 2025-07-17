@@ -14,6 +14,7 @@ from datetime import datetime  # ✅ для логирования времен�
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
+#TOKEN = "7601422052:AAFoAskZd7mwIrPjy9xGUc-T0eq60i3qmcQ"
 TOKEN = os.environ.get("BOT_TOKEN")
 CONTACT_URL = "https://t.me/portishead_berlin"
 

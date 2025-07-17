@@ -17,7 +17,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 #TOKEN = "7601422052:AAFoAskZd7mwIrPjy9xGUc-T0eq60i3qmcQ"
 TOKEN = os.environ.get("BOT_TOKEN")
 CONTACT_URL = "https://t.me/portishead_berlin"
-
+print(f"🔑 Bot token: {TOKEN}")
 # 📂 Загрузка категории товаров
 def load_categories(path="config/categories.json"):
     if not os.path.exists(path):

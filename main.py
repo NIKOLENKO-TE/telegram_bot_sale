@@ -14,9 +14,7 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMe
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
 TOKEN = "7601422052:AAFoAskZd7mwIrPjy9xGUc-T0eq60i3qmcQ"
-
 CONTACT_URL = "https://t.me/portishead_berlin"
-
 
 # 📂 Загрузка категории товаров
 def load_categories(path="config/categories.json"):

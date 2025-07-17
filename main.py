@@ -1,3 +1,5 @@
+import pip
+pip.main(['install', 'pytelegrambotapi'])
 import os
 import sys
 import collections
